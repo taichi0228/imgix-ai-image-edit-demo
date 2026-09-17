@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Packaging Retouch Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#0f8a3d; --green-dk:#0a6e30; --green-lt:#e8f5ec;
+  --ink:#16181d; --ink-2:#4a5058; --ink-3:#7c848e;
+  --line:#e2e5ea; --bg:#ffffff; --bg-2:#f6f7f9; --card:#ffffff;
+  --accent:#c8102e; --amber:#b26a00;
+  --imgix:#c2185b; --imgix-2:#6a1b9a;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 4px 12px rgba(16,24,40,.06);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --ink:#e9ecf1; --ink-2:#aab2bd; --ink-3:#818a95;
+    --line:#2b3039; --bg:#111419; --bg-2:#171b21; --card:#1a1f26;
+    --green-lt:#12301f;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#e9ecf1; --ink-2:#aab2bd; --ink-3:#818a95;
+  --line:#2b3039; --bg:#111419; --bg-2:#171b21; --card:#1a1f26;
+  --green-lt:#12301f;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans JP",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+/* ---------- demo bar ---------- */
+.demobar{
+  position:sticky; top:0; z-index:60;
+  background:linear-gradient(90deg,var(--imgix-2),var(--imgix));
+  color:#fff; box-shadow:0 2px 10px rgba(0,0,0,.18);
+}
+.demobar .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.db-brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.2px;font-size:14px}
+.db-dot{width:9px;height:9px;border-radius:50%;background:#7ef3b0;box-shadow:0 0 0 3px rgba(126,243,176,.25)}
+.db-note{font-size:12.5px;opacity:.92;flex:1;min-width:200px;line-height:1.45}
+.db-note b{font-weight:700}
+.switch{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:999px;padding:4px}
+.switch button{
+  appearance:none;border:0;cursor:pointer;border-radius:999px;
+  padding:7px 15px;font:600 12.5px/1 "Noto Sans JP",Inter,sans-serif;
+  color:#fff;background:transparent;transition:.15s;white-space:nowrap;
+}
+.switch button.on{background:#fff;color:var(--imgix-2)}
+.db-params{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+  background:rgba(0,0,0,.24);padding:5px 10px;border-radius:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.db-stats{font-size:12px;opacity:.9;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- cainz-ish header ---------- */
+.mockflag{
+  background:#fff3cd;color:#664d03;border-bottom:1px solid #ffe69c;
+  font-size:12px;text-align:center;padding:6px 16px;
+}
+:root[data-theme="dark"] .mockflag,
+:root:not([data-theme="light"]) .mockflag{@media (prefers-color-scheme:dark){background:#3a2f06;color:#ffe08a;border-color:#5a4a0a}}
+header.site{background:var(--green);color:#fff}
+header.site .wrap{display:flex;align-items:center;gap:18px;padding-top:12px;padding-bottom:12px}
+.logo{height:34px;width:auto;filter:brightness(0) invert(1)}
+.searchbox{flex:1;display:flex;background:#fff;border-radius:6px;overflow:hidden;min-width:0}
+.searchbox input{flex:1;border:0;padding:9px 12px;font:400 14px/1.4 "Noto Sans JP",sans-serif;min-width:0;color:#16181d;background:#fff}
+.searchbox input:focus{outline:2px solid #ffd54f;outline-offset:-2px}
+.searchbox button{border:0;background:var(--green-dk);color:#fff;padding:0 16px;cursor:pointer;font-size:14px}
+.hdr-ico{display:flex;gap:16px;font-size:11.5px;text-align:center;opacity:.97}
+.hdr-ico span{display:block;font-size:19px;line-height:1.2}
+nav.cats{background:var(--green-dk);color:#fff}
+nav.cats .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:0;padding-bottom:0;scrollbar-width:none}
+nav.cats .wrap::-webkit-scrollbar{display:none}
+nav.cats a{padding:11px 14px;font-size:13px;text-decoration:none;white-space:nowrap;opacity:.94}
+nav.cats a:hover{background:rgba(255,255,255,.12)}
+
+/* ---------- hero ---------- */
+.hero{margin:22px 0 10px}
+.hero-main{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:var(--bg-2);aspect-ratio:4/1}
+.hero-main img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+.hero-thumbs button{
+  padding:0;border:2px solid transparent;border-radius:7px;overflow:hidden;
+  cursor:pointer;background:var(--bg-2);aspect-ratio:4/1;
+}
+.hero-thumbs button.on{border-color:var(--green)}
+.hero-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- sections ---------- */
+section{margin:44px 0}
+.sec-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.sec-head h2{margin:0;font-size:20px;font-weight:700;letter-spacing:.01em}
+.sec-head p{margin:0;font-size:13px;color:var(--ink-2);flex:1;min-width:220px}
+.pill{
+  display:inline-block;background:var(--green-lt);color:var(--green-dk);
+  font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;
+}
+:root[data-theme="dark"] .pill,
+:root:not([data-theme="light"]) .pill{@media (prefers-color-scheme:dark){color:#6fe39b}}
+.pill.hot{background:#fdeaef;color:#a3114a}
+:root[data-theme="dark"] .pill.hot,
+:root:not([data-theme="light"]) .pill.hot{@media (prefers-color-scheme:dark){background:#3a0f22;color:#ff8fb8}}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(4,1fr)}.hero-thumbs{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;transition:.16s;
+}
+.card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.ph{position:relative;aspect-ratio:1;background:#fff;overflow:hidden}
+:root[data-theme="dark"] .ph,
+:root:not([data-theme="light"]) .ph{@media (prefers-color-scheme:dark){background:#f2f2f2}}
+.ph img{width:100%;height:100%;object-fit:contain;display:block}
+.ph.loading::after{
+  content:"";position:absolute;inset:0;background:
+    linear-gradient(100deg,transparent 30%,rgba(194,24,91,.14) 50%,transparent 70%);
+  background-size:220% 100%;animation:sh 1.1s linear infinite;
+}
+@keyframes sh{from{background-position:180% 0}to{background-position:-80% 0}}
+.badge-ai{
+  position:absolute;top:7px;left:7px;z-index:2;
+  background:linear-gradient(90deg,var(--imgix-2),var(--imgix));color:#fff;
+  font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;letter-spacing:.3px;
+}
+.badge-skip{
+  position:absolute;top:7px;left:7px;z-index:2;
+  background:rgba(20,22,26,.72);color:#fff;
+  font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
+}
+.tag{position:absolute;top:7px;right:7px;z-index:2;background:rgba(255,255,255,.94);color:var(--ink-2);font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;border:1px solid var(--line)}
+.card-b{padding:10px 11px 12px;display:flex;flex-direction:column;gap:5px;flex:1}
+.card-b .nm{font-size:12.5px;line-height:1.45;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
+.card-b .pr{font-size:16px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;margin-top:auto}
+.card-b .pr small{font-size:10.5px;font-weight:500;color:var(--ink-3);margin-left:2px}
+.stars{font-size:10.5px;color:var(--amber)}
+.stars span{color:var(--ink-3);margin-left:4px}
+
+/* ---------- comparison sliders ---------- */
+.cmp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:960px){.cmp-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.cmp-grid{grid-template-columns:1fr}}
+.cmp{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cmp-stage{position:relative;aspect-ratio:1;background:#fff;overflow:hidden;cursor:ew-resize;touch-action:none;user-select:none}
+.cmp-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.cmp-after{clip-path:inset(0 0 0 50%)}
+.cmp-line{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.28);pointer-events:none}
+.cmp-knob{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  width:34px;height:34px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);display:grid;place-items:center;
+  font-size:13px;color:#333;pointer-events:none;
+}
+.cmp-tag{position:absolute;bottom:9px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:5px;color:#fff;pointer-events:none;z-index:3}
+.cmp-tag.l{left:9px;background:rgba(20,22,26,.78)}
+.cmp-tag.r{right:9px;background:linear-gradient(90deg,var(--imgix-2),var(--imgix))}
+.cmp-b{padding:11px 13px 13px}
+.cmp-b h4{margin:0 0 3px;font-size:13.5px;font-weight:700}
+.cmp-b p{margin:0;font-size:12px;color:var(--ink-2);line-height:1.5}
+
+/* ---------- strips / features ---------- */
+.strips{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:700px){.strips{grid-template-columns:1fr}}
+.strips img{width:100%;aspect-ratio:4/1;object-fit:cover;border-radius:var(--radius);display:block;box-shadow:var(--shadow);background:var(--bg-2)}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:860px){.feats{grid-template-columns:repeat(2,1fr)}}
+.feats figure{margin:0}
+.feats img{width:100%;aspect-ratio:2/1;object-fit:cover;border-radius:var(--radius);display:block;box-shadow:var(--shadow);background:var(--bg-2)}
+.feats figcaption{font-size:12px;color:var(--ink-2);margin-top:7px;line-height:1.45}
+
+/* ---------- explainer ---------- */
+.explain{background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:26px}
+.explain h3{margin:0 0 6px;font-size:17px}
+.explain>p{margin:0 0 20px;font-size:13.5px;color:var(--ink-2);max-width:80ch}
+.ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:820px){.ex-grid{grid-template-columns:1fr}}
+.ex-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.ex-card h4{margin:0 0 7px;font-size:13.5px;display:flex;align-items:center;gap:7px}
+.ex-card h4 em{font-style:normal;background:var(--imgix);color:#fff;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.ex-card p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.ex-card code{background:var(--bg-2);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.urlbox{
+  margin-top:20px;background:#0f1218;color:#d7dbe2;border-radius:10px;padding:14px 16px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.75;
+  overflow-x:auto;white-space:pre;
+}
+.urlbox .k{color:#ff8fb8}.urlbox .v{color:#7ee3a8}.urlbox .c{color:#6b7480}
+
+footer.site{background:var(--bg-2);border-top:1px solid var(--line);margin-top:54px;padding:26px 0;font-size:12px;color:var(--ink-3)}
+footer.site .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="demobar">
+  <div class="wrap">
+    <div class="db-brand"><span class="db-dot"></span>imgix AI Image Edit デモ</div>
+    <div class="switch" role="group" aria-label="画像モード切替">
+      <button id="btnOff" class="on" type="button">通常配信</button>
+      <button id="btnOn" type="button">AI補正 ON</button>
+    </div>
+    <div class="db-params" id="paramView"></div>
+    <div class="db-note">上のトグルで、<b>同じ画像 URL にパラメータを足すだけ</b>でサイト全体がどう変わるかを切り替えられます。</div>
+    <div class="db-stats" id="stats"></div>
+  </div>
+</div>
+
+<div class="mockflag">
+  これは imgix の機能説明用モックアップです。カインズ様の実サイトではありません。画像はデモ目的で www.cainz.com から取得しています。
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <img class="logo" id="logo" alt="CAINZ">
+    <div class="searchbox">
+      <input type="text" placeholder="なにをお探しですか？" aria-label="検索">
+      <button type="button">検索</button>
+    </div>
+    <div class="hdr-ico">
+      <div><span>♡</span>お気に入り</div>
+      <div><span>☰</span>マイページ</div>
+      <div><span>🛒</span>カート</div>
+    </div>
+  </div>
+</header>
+<nav class="cats">
+  <div class="wrap" id="navcats"></div>
+</nav>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="hero-main"><img id="heroImg" alt=""></div>
+    <div class="hero-thumbs" id="heroThumbs"></div>
+  </div>
+
+  <section id="sec-compare">
+    <div class="sec-head">
+      <h2>Before / After</h2>
+      <span class="pill hot">ai-image-edit=packaging</span>
+      <p>スライダーを左右に動かすと、同じ原本画像に対する AI 補正の効果を確認できます。撮り直しも Photoshop 作業もありません。</p>
+    </div>
+    <div class="cmp-grid" id="cmpGrid"></div>
+  </section>
+
+  <section>
+    <div class="strips" id="strips"></div>
+  </section>
+
+  <div id="catSections"></div>
+
+  <section>
+    <div class="sec-head"><h2>特集・ランキング</h2></div>
+    <div class="feats" id="feats"></div>
+  </section>
+
+  <section>
+    <div class="explain">
+      <h3>このデモで起きていること</h3>
+      <p>商品画像は 1 枚も差し替えていません。カインズ様のサイトから取得した原本 89 点をそのまま imgix Asset Manager にアップロードし、配信 URL に 2 つのパラメータを足しているだけです。</p>
+      <div class="ex-grid">
+        <div class="ex-card">
+          <h4><em>1</em>ai-image-edit=packaging</h4>
+          <p>袋・パウチのシワや折れ、箱・缶・瓶のへこみを均し、強すぎる影と露出を補正します。<b>バーコード・成分表示・ロゴなどの重要要素は保護</b>されるため、法令表示が崩れません。</p>
+        </div>
+        <div class="ex-card">
+          <h4><em>2</em>ai-image-edit-analysis=true</h4>
+          <p>本処理の前に軽量な解析が走り、<b>補正が必要な画像かどうかを自動判定</b>します。不要と判定された画像（家具・家電・バナーなど）は原本のまま配信され、フルクレジットを消費しません。全点に同じ URL を当てて良いのはこのためです。</p>
+        </div>
+        <div class="ex-card">
+          <h4><em>3</em>運用上のインパクト</h4>
+          <p>撮影・レタッチの外注工数をかけずに、既存カタログ全点の品質を底上げできます。原本は保持されるため、いつでもパラメータを外して元に戻せます。</p>
+        </div>
+      </div>
+      <div class="urlbox" id="urlbox"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div>imgix AI Image Edit — 検証用モックアップ</div>
+    <div id="footdomain"></div>
+  </div>
+</footer>
+
+<script>
+const DATA = {"domain": "tkanemoto.imgix.net", "folder": "tkanemoto", "cats": {"packaging": [{"f": "4549509981787_01.jpg", "n": "カインズ 酸素系漂白剤 過炭酸ナトリウム 粉末タイプ 2kg", "p": "¥598", "t": "詰替パウチ"}, {"f": "4550596262499_01.jpg", "n": "可燃ごみで捨てられる花と野菜の培養土 25L", "p": "¥798", "t": "大型袋"}, {"f": "4549509274551_01.jpg", "n": "CAINZ キッチン用 薬用泡ハンドソープ 無香料 詰替 220ml", "p": "¥248", "t": "詰替パウチ"}, {"f": "4550596176352_01.jpg", "n": "カインズ スマイリア 鶏肉と玄米のぜいたく素材ごはん 1.2kg 成猫用", "p": "¥880", "t": "フード袋"}, {"f": "4550596105543_01.jpg", "n": "京都のだし屋さんが作ったおうちカレー 170g×4袋", "p": "¥698", "t": "レトルト"}, {"f": "4902011100471_01.jpg", "n": "アテント 尿とりパッド スーパー吸収 男性用 72枚", "p": "¥1,480", "t": "大型袋"}, {"f": "4987176392619_01.jpg", "n": "PG e-ファブリーズ リリー お試し", "p": "¥398", "t": "ボトル"}, {"f": "4549509621584_01.jpg", "n": "カインズ ふるだけボトルクリーナー 200g", "p": "¥398", "t": "ボトル"}, {"f": "4549509621638_01.jpg", "n": "カインズ 冷蔵庫の自動製氷機クリーナー 200ml 1回分", "p": "¥348", "t": "ボトル"}, {"f": "4550596164144_01.jpg", "n": "車のガラスコーティング剤シリコーンタイプ", "p": "¥1,280", "t": "ボトル"}, {"f": "4904998126871_01.jpg", "n": "(埼玉)東亜酒造 都ほまれ 原酒 2000ml", "p": "¥2,180", "t": "瓶"}, {"f": "4901065809361_01.jpg", "n": "ペーパータオルケース クリア", "p": "¥698", "t": "パッケージ箱"}], "home": [{"f": "5000000241728_01.jpg", "n": "レンジ上ラック トースターラック 伸縮式 幅40~60cm", "p": "¥3,980", "t": ""}, {"f": "4550533251913_01.jpg", "n": "デスクこたつ 幅75cm 奥行50cm 高さ70cm CDK-F754C", "p": "¥12,800", "t": ""}, {"f": "4550596231815_01.jpg", "n": "くつろぎクッション NEDOCORO 幅170cm グレー", "p": "¥6,980", "t": ""}, {"f": "4532143139683_01.jpg", "n": "座り心地座椅子 幅64cm 奥行60〜115cm", "p": "¥4,980", "t": ""}, {"f": "4550596237893_01.jpg", "n": "持ち手付き カバーが洗える背もたれイス Lepoco ブラック", "p": "¥3,480", "t": ""}, {"f": "4549509441373_01.jpg", "n": "引き出し衣装ケースロング L 幅39×奥行74×高さ30cm", "p": "¥1,780", "t": ""}, {"f": "4549509732587_01.jpg", "n": "小物引出しケース 深型5段 A4", "p": "¥1,480", "t": ""}, {"f": "4550596064666_01.jpg", "n": "カインズ ファイルボックス ノーマル ホワイト", "p": "¥398", "t": ""}, {"f": "4550596193984_01.jpg", "n": "吸音パネル ホワイト 1枚", "p": "¥980", "t": ""}, {"f": "4550596148496_01.jpg", "n": "【CDM】持ち運びできるカウンターテーブル S", "p": "¥5,980", "t": ""}, {"f": "4550596148519_01.jpg", "n": "【CDM】持ち運びできるカウンターテーブル L", "p": "¥7,980", "t": ""}, {"f": "4549509971887_01.jpg", "n": "【CDM】組み合わせてかたちが変わるベンチ(2個セット)", "p": "¥9,800", "t": ""}], "appliance": [{"f": "5025155106518_01.jpg", "n": "Dyson V12 Detect Slim Fluffy SV46FF", "p": "¥79,800", "t": ""}, {"f": "4054278648217_01.jpg", "n": "ケルヒャー 充電式乾湿両用バキュームクリーナー WD 1", "p": "¥14,800", "t": ""}, {"f": "4580060598809_01.jpg", "n": "サンコー シンク横に置ける食器乾燥機Slim", "p": "¥16,800", "t": ""}, {"f": "8824290001275_01.jpg", "n": "アイリスオーヤマ サーキュレーター加湿器 HCK-5520-W", "p": "¥12,800", "t": ""}, {"f": "4975058575113_01.jpg", "n": "TWINBIRD 家庭用コンパクト精米器 精米御膳 MR-E751W", "p": "¥19,800", "t": ""}, {"f": "4975287608361_01.jpg", "n": "スライヴ マルチマッサージチェア ホワイト CMD-1000WH", "p": "¥24,800", "t": ""}, {"f": "8824290004584_01.jpg", "n": "アイリスオーヤマ タブレット 10inch シャンパンゴールド", "p": "¥18,800", "t": ""}, {"f": "4550596161068_01.jpg", "n": "カインズ ムラになりにくい フラットレンジ", "p": "¥14,800", "t": ""}, {"f": "0197050002815_01.jpg", "n": "マキタ 充電式インパクトドライバ 14.4V MTD001DWA", "p": "¥16,800", "t": ""}, {"f": "4969182517767_01.jpg", "n": "プログラム電動ウォーカー EVW54104", "p": "¥39,800", "t": ""}, {"f": "4550596145068_01.jpg", "n": "カインズ ナノバブルシャワーヘッド ホワイト", "p": "¥4,980", "t": ""}, {"f": "4550596209739_01.jpg", "n": "レンジで楽チン ホットサンドメーカー", "p": "¥980", "t": ""}], "outdoor": [{"f": "5000000224576_01.jpg", "n": "アウトドア テーブル チェアセット キャンプ 軽量", "p": "¥7,980", "t": ""}, {"f": "4934756105688_01.jpg", "n": "サウナストーブ＆テント 幅220cm HSS-560SP", "p": "¥98,000", "t": ""}, {"f": "4550596183596_01.jpg", "n": "丸巻リアル人工芝 30mm人工芝 2×10m", "p": "¥19,800", "t": ""}, {"f": "4969182238846_01.jpg", "n": "アルミ製梯子兼用幅広脚立 7段 MR210W", "p": "¥12,800", "t": ""}, {"f": "8773790000306_01.jpg", "n": "ポーリッシュ 突っ張り式物干し ベランダ用 PS-20", "p": "¥4,980", "t": ""}, {"f": "4573280642780_01.jpg", "n": "PYKES PEAK ポスト一体型宅配ボックス 波月", "p": "¥29,800", "t": ""}, {"f": "4550596099347_01.jpg", "n": "屋外用サイクルスタンド 1台用 3段階調整対応", "p": "¥3,480", "t": ""}, {"f": "4549509036401_01.jpg", "n": "火消シート 1.0×1.0m", "p": "¥1,980", "t": ""}, {"f": "4550596018935_01.jpg", "n": "カインズ 軽量メッシュサイレントカート ブラック", "p": "¥3,980", "t": ""}, {"f": "4549509968573_01.jpg", "n": "CAINZ PRO KUROCKER'S サコッシュ ブラック", "p": "¥1,480", "t": ""}, {"f": "4550596135090_01.jpg", "n": "吊るしても立たせても干せるシューズハンガー", "p": "¥498", "t": ""}, {"f": "4550596165851_01.jpg", "n": "レンジで楽チン 蒸し＆グリルプレート 深型", "p": "¥1,280", "t": ""}], "living": [{"f": "4550596246550_01.jpg", "n": "着る毛布 フード付き 幅45cm 奥行110cm グレー", "p": "¥2,980", "t": ""}, {"f": "4550596246598_01.jpg", "n": "着る毛布 フード付き ロング ダークグレー", "p": "¥3,480", "t": ""}, {"f": "4550596247953_01.jpg", "n": "座り心地のよい座椅子 幅64cm グレー", "p": "¥4,980", "t": ""}, {"f": "4550596249810_01.jpg", "n": "ソフトボアスリッパ L 25〜27cm グレー", "p": "¥698", "t": ""}, {"f": "4550596157177_01.jpg", "n": "履いて歩くだけでお掃除できるスリッパ ミッキーマウス", "p": "¥980", "t": ""}, {"f": "4550596249551_01.jpg", "n": "ヒールアップ やわらか底厚スリッパ M ブラック", "p": "¥898", "t": ""}, {"f": "4550596156798_01.jpg", "n": "すべり止め付きマイクロファイバースリッパ グレー", "p": "¥598", "t": ""}, {"f": "4549509688983_01.jpg", "n": "やわらか毛布 グレー シングル 140×190cm", "p": "¥2,480", "t": ""}, {"f": "4550596166971_01.jpg", "n": "くつろぎミニケット ライトグレー 幅70cm", "p": "¥1,280", "t": ""}, {"f": "4550596243283_01.jpg", "n": "色々使えるブランケット ベージュ 幅80cm", "p": "¥1,480", "t": ""}, {"f": "4550596147246_01.jpg", "n": "タオル素材の敷パッド Pitapa ベージュ シングル", "p": "¥2,980", "t": ""}, {"f": "4550596043661_01.jpg", "n": "なめらか敷パッド ブラウン シングル", "p": "¥2,480", "t": ""}], "pet": [{"f": "4550596258188_01.jpg", "n": "トレーナー Mサイズ ボーダー マスタード ペット服", "p": "¥1,980", "t": ""}, {"f": "4550596255835_01.jpg", "n": "反射ニット Mサイズ ピンク ペット服", "p": "¥2,280", "t": ""}, {"f": "4550596256146_01.jpg", "n": "もこくまセーラー Lサイズ モカ ペット服", "p": "¥2,480", "t": ""}, {"f": "4550596255415_01.jpg", "n": "切り替えチェックカットソー MDサイズ グレー", "p": "¥1,780", "t": ""}, {"f": "4550596258386_01.jpg", "n": "オーバーオール Mサイズ ネイビー ペット服", "p": "¥2,680", "t": ""}, {"f": "4550596256818_01.jpg", "n": "カットソー SSサイズ ミッキーマウス ペット服", "p": "¥1,880", "t": ""}, {"f": "4550596256931_01.jpg", "n": "セーラー風カットソー Lサイズ 101匹わんちゃん", "p": "¥2,080", "t": ""}, {"f": "4550596257068_01.jpg", "n": "セーラー風カットソー Mサイズ スティッチ", "p": "¥2,080", "t": ""}, {"f": "4550596256610_01.jpg", "n": "耳付きカットソー Mサイズ プルート ペット服", "p": "¥1,980", "t": ""}, {"f": "4550596256757_01.jpg", "n": "耳付きカットソー MDサイズ ロッツォ ペット服", "p": "¥1,980", "t": ""}, {"f": "4550596256481_01.jpg", "n": "耳付きカットソー Lサイズ ミッキーマウス", "p": "¥2,180", "t": ""}, {"f": "4550596257495_01.jpg", "n": "着ぐるみパーカー SDサイズ ミニーマウス", "p": "¥2,880", "t": ""}, {"f": "4550596234977_01.jpg", "n": "【CDM】ピンで取り付ける壁付キャットステップ 30cm", "p": "¥1,980", "t": ""}, {"f": "4550596027340_01.jpg", "n": "交換できる爪とぎファニチャーハウス", "p": "¥3,480", "t": ""}, {"f": "4550596227092_01.jpg", "n": "カインズ リカバリーウェア ポケ付きシャツ半袖 ブラック M", "p": "¥3,980", "t": ""}]}, "banners": [{"f": "banner_point_cp_2880x720.jpg", "n": "くらしに、ららら。月間ポイントキャンペーン"}, {"f": "banner_specialsale_2880x720.jpg", "n": "【カインズ公式】くらしに、ららら。月間 2026"}, {"f": "banner_limitedsale2609_2880x720.jpg", "n": "オンラインショップ限定セール"}, {"f": "banner_recoverywear_2880x720.jpg", "n": "カインズのリカバリーウェアで疲労回復をサポート"}, {"f": "banner_cp-cainzpay_em_sun_10pt_september_cal_today_2880x720.jpg", "n": "CAINZ Pay（カインズペイ）"}], "strips": [{"f": "banner_ec_new_arrival_1600x400_202609.jpg", "n": "今月の新着オンライン限定商品"}, {"f": "banner_economy_size_rarara_1600x400.jpg", "n": "選ぶだけで節約！大容量サイズ"}, {"f": "banner_deadline_bnr_reformhojokin2026window_1600_400.jpg", "n": "断熱・省エネ、内窓リフォーム"}, {"f": "banner_sousenkyo_1600x400.jpg", "n": "くらしに、ららら。総選挙2026"}], "features": [{"f": "banner_update_750x375.jpg", "n": "みんなの声でアップデートしました"}, {"f": "banner_best_750x375.jpg", "n": "【2026年上半期】カインズ人気商品ランキング"}, {"f": "banner_new-products_750x375.jpg", "n": "カインズの新商品・新着商品"}, {"f": "banner_flyer_686_686px.jpg", "n": "ネットで買える！お買い得なチラシ商品"}], "sliders": [{"f": "4549509981787_01.jpg", "n": "カインズ 酸素系漂白剤 2kg", "d": "紙袋のシワ・折れを平滑化し、露出を補正"}, {"f": "4550596262499_01.jpg", "n": "花と野菜の培養土 25L", "d": "大型ポリ袋のたるみと影を整える"}, {"f": "4549509274551_01.jpg", "n": "薬用泡ハンドソープ 詰替 220ml", "d": "パウチのシワを除去（バーコードは保護）"}, {"f": "4550596176352_01.jpg", "n": "スマイリア 猫用 1.2kg", "d": "フード袋のヨレと硬い影を補正"}, {"f": "4550596105543_01.jpg", "n": "おうちカレー 170g×4袋", "d": "レトルト外装の反射とシワを軽減"}, {"f": "4904998126871_01.jpg", "n": "都ほまれ 原酒 2000ml", "d": "瓶ラベルの歪みとハイライトを整える"}], "catmeta": [{"k": "packaging", "t": "パッケージ商材", "d": "袋・パウチ・ボトル・箱。<code>ai-image-edit=packaging</code> が最も効くカテゴリです。"}, {"k": "home", "t": "収納・インテリア", "d": "家具・収納用品。"}, {"k": "appliance", "t": "家電・工具", "d": "生活家電と電動工具。"}, {"k": "outdoor", "t": "アウトドア・エクステリア", "d": "キャンプ・園芸・DIY。"}, {"k": "living", "t": "寝具・ルームウェア", "d": "毛布・スリッパ・敷パッド。"}, {"k": "pet", "t": "ペット用品", "d": "ペット服・キャットグッズ。"}]};
+const BASE = "https://" + DATA.domain + "/" + DATA.folder + "/";
+const AI = "ai-image-edit=packaging&ai-image-edit-analysis=true";
+
+let aiOn = false;
+const tracked = [];   // {el, kind}
+
+function url(file, params, withAI){
+  let q = params.slice();
+  if (withAI) q.push(AI);
+  return BASE + encodeURIComponent(file) + "?" + q.join("&");
+}
+
+/* imgix returns HTTP 423 while an AI render is in flight. The <img> fires
+   `error`; retry the same URL with backoff until the render lands. */
+function load(el, file, params, withAI, tries){
+  tries = tries || 0;
+  const box = el.closest(".ph");
+  if (withAI && box) box.classList.add("loading");
+  el.onerror = () => {
+    /* Cold renders can take minutes. imgix answers 423 meanwhile, and the
+       browser caches that error — so a plain retry just replays the cached
+       failure. Revalidate the cache entry with fetch() before retrying. */
+    if (tries < 40){
+      setTimeout(() => {
+        const u = url(file, params, withAI);
+        fetch(u, {cache: "reload"})
+          .catch(() => {})
+          .then(() => load(el, file, params, withAI, tries + 1));
+      }, Math.min(2000 + tries * 1200, 15000));
+    } else if (box){
+      box.classList.remove("loading");
+    }
+  };
+  el.onload = () => { if (box) box.classList.remove("loading"); bump(el); };
+  el.src = url(file, params, withAI);
+}
+
+/* count distinct elements, not load events — the hero carousel re-fires onload */
+let loadedEls = new Set();
+function bump(el){
+  loadedEls.add(el);
+  document.getElementById("stats").textContent =
+    aiOn ? loadedEls.size + " / " + tracked.length + " 枚 配信済み"
+         : tracked.length + " 枚";
+}
+
+function track(el, file, params){
+  tracked.push({el, file, params});
+}
+
+function applyMode(){
+  loadedEls = new Set();
+  tracked.forEach(t => load(t.el, t.file, t.params, aiOn));
+  document.getElementById("paramView").textContent = aiOn ? "?" + AI : "?（パラメータなし）";
+  document.getElementById("btnOn").classList.toggle("on", aiOn);
+  document.getElementById("btnOff").classList.toggle("on", !aiOn);
+  document.querySelectorAll(".badge-ai").forEach(b => b.style.display = aiOn ? "" : "none");
+  document.getElementById("stats").textContent =
+    aiOn ? "0 / " + tracked.length + " 枚 配信済み" : tracked.length + " 枚";
+}
+
+/* ---------- build ---------- */
+const P_CARD   = ["w=440","h=440","fit=fill","fill=solid","fill-color=white","auto=compress,format"];
+const P_HERO   = ["w=1400","ar=4:1","fit=crop","auto=compress,format"];
+const P_THUMB  = ["w=300","ar=4:1","fit=crop","auto=compress,format"];
+const P_STRIP  = ["w=760","ar=4:1","fit=crop","auto=compress,format"];
+const P_FEAT   = ["w=560","ar=2:1","fit=crop","auto=compress,format"];
+const P_CMP    = ["w=700","h=700","fit=fill","fill=solid","fill-color=white","auto=compress,format"];
+
+document.getElementById("logo").src = BASE + "cainz-logo.svg";
+document.getElementById("footdomain").textContent = DATA.domain + "/" + DATA.folder + "/";
+
+/* nav */
+document.getElementById("navcats").innerHTML =
+  DATA.catmeta.map(c => '<a href="#cat-' + c.k + '">' + c.t + "</a>").join("") +
+  '<a href="#sec-compare">Before / After</a>';
+
+/* hero */
+const heroImg = document.getElementById("heroImg");
+let heroIdx = 0;
+document.getElementById("heroThumbs").innerHTML = DATA.banners.map((b, i) =>
+  '<button type="button" data-i="' + i + '" class="' + (i ? "" : "on") + '"><img alt=""></button>').join("");
+const thumbBtns = [...document.querySelectorAll(".hero-thumbs button")];
+thumbBtns.forEach((btn, i) => {
+  track(btn.querySelector("img"), DATA.banners[i].f, P_THUMB);
+  btn.onclick = () => setHero(i);
+});
+function setHero(i){
+  heroIdx = i;
+  thumbBtns.forEach((b, j) => b.classList.toggle("on", i === j));
+  heroImg.alt = DATA.banners[i].n;
+  load(heroImg, DATA.banners[i].f, P_HERO, aiOn);
+}
+heroImg.alt = DATA.banners[0].n;
+track(heroImg, DATA.banners[0].f, P_HERO);
+setInterval(() => setHero((heroIdx + 1) % DATA.banners.length), 6000);
+
+/* before/after sliders */
+document.getElementById("cmpGrid").innerHTML = DATA.sliders.map((s, i) => `
+  <div class="cmp">
+    <div class="cmp-stage" data-i="${i}">
+      <img class="cmp-before" alt="">
+      <img class="cmp-after" alt="">
+      <span class="cmp-tag l">原本</span>
+      <span class="cmp-tag r">AI 補正</span>
+      <div class="cmp-line"></div><div class="cmp-knob">⇄</div>
+    </div>
+    <div class="cmp-b"><h4>${s.n}</h4><p>${s.d}</p></div>
+  </div>`).join("");
+
+document.querySelectorAll(".cmp-stage").forEach(stage => {
+  const s = DATA.sliders[+stage.dataset.i];
+  const before = stage.querySelector(".cmp-before");
+  const after  = stage.querySelector(".cmp-after");
+  before.src = url(s.f, P_CMP, false);
+  load(after, s.f, P_CMP, true);           // always AI, independent of the toggle
+  const line = stage.querySelector(".cmp-line");
+  const knob = stage.querySelector(".cmp-knob");
+  const set = pct => {
+    pct = Math.max(0, Math.min(100, pct));
+    after.style.clipPath = "inset(0 0 0 " + pct + "%)";
+    line.style.left = pct + "%"; knob.style.left = pct + "%";
+  };
+  const move = e => {
+    const r = stage.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    set(x / r.width * 100);
+  };
+  let down = false;
+  stage.addEventListener("pointerdown", e => { down = true; stage.setPointerCapture(e.pointerId); move(e); });
+  stage.addEventListener("pointermove", e => { if (down) move(e); });
+  stage.addEventListener("pointerup",  () => { down = false; });
+  stage.addEventListener("pointercancel", () => { down = false; });
+});
+
+/* strips */
+document.getElementById("strips").innerHTML =
+  DATA.strips.map(() => "<img alt=''>").join("");
+document.querySelectorAll("#strips img").forEach((img, i) => {
+  img.alt = DATA.strips[i].n; track(img, DATA.strips[i].f, P_STRIP);
+});
+
+/* category sections */
+document.getElementById("catSections").innerHTML = DATA.catmeta.map(c => {
+  const items = DATA.cats[c.k];
+  const hot = c.k === "packaging";
+  return `<section id="cat-${c.k}">
+    <div class="sec-head">
+      <h2>${c.t}</h2>
+      ${hot ? '<span class="pill hot">効果が見えやすい</span>' : '<span class="pill">解析で自動判定</span>'}
+      <p>${c.d}</p>
+    </div>
+    <div class="grid">
+      ${items.map((it, i) => `
+        <article class="card">
+          <div class="ph" data-cat="${c.k}" data-i="${i}">
+            <span class="badge-ai" style="display:none">AI 補正</span>
+            ${it.t ? '<span class="tag">' + it.t + "</span>" : ""}
+            <img alt="">
+          </div>
+          <div class="card-b">
+            <div class="nm">${it.n}</div>
+            <div class="stars">★★★★☆ <span>(${12 + ((i * 37) % 180)})</span></div>
+            <div class="pr">${it.p}<small>税込</small></div>
+          </div>
+        </article>`).join("")}
+    </div>
+  </section>`;
+}).join("");
+
+document.querySelectorAll(".ph[data-cat]").forEach(ph => {
+  const it = DATA.cats[ph.dataset.cat][+ph.dataset.i];
+  const img = ph.querySelector("img");
+  img.alt = it.n; track(img, it.f, P_CARD);
+});
+
+/* features */
+document.getElementById("feats").innerHTML = DATA.features.map(f =>
+  "<figure><img alt=''><figcaption>" + f.n + "</figcaption></figure>").join("");
+document.querySelectorAll("#feats img").forEach((img, i) => {
+  img.alt = DATA.features[i].n; track(img, DATA.features[i].f, P_FEAT);
+});
+
+/* url example */
+document.getElementById("urlbox").innerHTML =
+  '<span class="c">// 通常配信</span>\n' +
+  "https://" + DATA.domain + "/" + DATA.folder + "/4549509981787_01.jpg" +
+  '<span class="v">?w=440&amp;h=440&amp;fit=fill&amp;fill=solid&amp;fill-color=white&amp;auto=compress,format</span>\n\n' +
+  '<span class="c">// AI 補正 ON（同じ原本・同じパス、末尾に 2 パラメータを追加するだけ）</span>\n' +
+  "https://" + DATA.domain + "/" + DATA.folder + "/4549509981787_01.jpg" +
+  '<span class="v">?w=440&amp;h=440&amp;fit=fill&amp;fill=solid&amp;fill-color=white&amp;auto=compress,format</span>' +
+  '<span class="k">&amp;ai-image-edit=packaging&amp;ai-image-edit-analysis=true</span>';
+
+/* toggle */
+document.getElementById("btnOn").onclick  = () => { aiOn = true;  applyMode(); };
+document.getElementById("btnOff").onclick = () => { aiOn = false; applyMode(); };
+
+applyMode();
+</script>
+</body>
+</html>
